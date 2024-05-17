@@ -1,0 +1,45 @@
+LIBRETRO_COMM_DIR := $(CORE_DIR)/vendor/libretro-common
+
+INCFLAGS := \
+	-I$(LIBRETRO_COMM_DIR)/include \
+	-I$(CORE_DIR)
+
+ifneq (,$(findstring msvc2003,$(platform)))
+	INCFLAGS += -I$(LIBRETRO_COMM_DIR)/include/compat/msvc
+endif
+
+COREDEFINES = \
+	-D__LIBRETRO__
+
+SOURCES_C := $(CORE_DIR)/physfs_test_libretro.c
+
+# libretro-common
+ifneq ($(STATIC_LINKING), 1)
+	SOURCES_C += \
+		$(LIBRETRO_COMM_DIR)/file/file_path.c \
+		$(LIBRETRO_COMM_DIR)/string/stdstring.c \
+		$(LIBRETRO_COMM_DIR)/encodings/encoding_utf.c \
+		$(LIBRETRO_COMM_DIR)/features/features_cpu.c \
+		$(LIBRETRO_COMM_DIR)/rthreads/rthreads.c \
+		$(LIBRETRO_COMM_DIR)/time/rtime.c \
+		$(LIBRETRO_COMM_DIR)/compat/compat_strl.c \
+		$(LIBRETRO_COMM_DIR)/vfs/vfs_implementation.c
+endif
+
+# PhysFS
+FLAGS += -I$(CORE_DIR)/vendor/physfs/src
+FLAGS += -DPHYSFS_NO_CDROM_SUPPORT=1 \
+	-DPHYSFS_SUPPORTS_DEFAULT=0 \
+	-DPHYSFS_SUPPORTS_ZIP=1 \
+    -DPHYSFS_PLATFORM_LIBRETRO
+
+SOURCES_C += $(wildcard \
+	$(CORE_DIR)/vendor/physfs/src/*.c \
+)
+
+ifeq ($(platform), osx)
+#	LDFLAGS += -mmacosx-version-min=10.2
+	LDFLAGS += -framework IOKit -framework Foundation
+#	FLAGS += -DMAC_OS_X_VERSION_MIN_REQUIRED=1020
+	FLAGS += -D__MACH__ -D__APPLE__
+endif
