@@ -199,6 +199,12 @@ bool retro_load_game(const struct retro_game_info *info)
    };
    environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &msg);
 
+   // Display different directories
+   log_cb(RETRO_LOG_INFO, "PHYSFS_getBaseDir: %s\n", PHYSFS_getBaseDir());
+   log_cb(RETRO_LOG_INFO, "PHYSFS_getPrefDir: %s\n", PHYSFS_getPrefDir("libretro", "physfs_test"));
+   log_cb(RETRO_LOG_INFO, "PHYSFS_getUserDir: %s\n", PHYSFS_getUserDir());
+   log_cb(RETRO_LOG_INFO, "PHYSFS_getWriteDir: %s\n", PHYSFS_getWriteDir());
+
    (void)info;
    return true;
 }
