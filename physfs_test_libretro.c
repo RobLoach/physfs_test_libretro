@@ -12,11 +12,7 @@ static uint32_t *frame_buf;
 static struct retro_log_callback logging;
 static retro_log_printf_t log_cb;
 static retro_video_refresh_t video_cb;
-static retro_audio_sample_t audio_cb;
-static retro_audio_sample_batch_t audio_batch_cb;
 static retro_environment_t environ_cb;
-static retro_input_poll_t input_poll_cb;
-static retro_input_state_t input_state_cb;
 
 static void fallback_log(enum retro_log_level level, const char *fmt, ...)
 {
@@ -33,6 +29,8 @@ void retro_init(void)
 
    // Initialize PhysFS
    //if (PHYSFS_init(NULL) == 0) {
+
+   // Pass in the environment callback to initialize PhysFS
    if (PHYSFS_init((const char*)environ_cb) == 0) {
       log_cb(RETRO_LOG_ERROR, "Failed to initialize PhysFS: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
    }
@@ -101,22 +99,18 @@ void retro_set_environment(retro_environment_t cb)
 
 void retro_set_audio_sample(retro_audio_sample_t cb)
 {
-   audio_cb = cb;
 }
 
 void retro_set_audio_sample_batch(retro_audio_sample_batch_t cb)
 {
-   audio_batch_cb = cb;
 }
 
 void retro_set_input_poll(retro_input_poll_t cb)
 {
-   input_poll_cb = cb;
 }
 
 void retro_set_input_state(retro_input_state_t cb)
 {
-   input_state_cb = cb;
 }
 
 void retro_set_video_refresh(retro_video_refresh_t cb)
@@ -131,15 +125,6 @@ void retro_reset(void)
 {
    x_coord = 0;
    y_coord = 0;
-}
-
-static void update_input(void)
-{
-   input_poll_cb();
-   if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP))
-   {
-      /* stub */
-   }
 }
 
 static void render_checkered(void)
@@ -163,24 +148,9 @@ static void render_checkered(void)
    video_cb(buf, 320, 240, stride << 2);
 }
 
-static void check_variables(void)
-{
-}
-
-static void audio_callback(void)
-{
-   audio_cb(0, 0);
-}
-
 void retro_run(void)
 {
-   update_input();
    render_checkered();
-   audio_callback();
-
-   bool updated = false;
-   if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &updated) && updated)
-      check_variables();
 }
 
 bool retro_load_game(const struct retro_game_info *info)
@@ -191,8 +161,6 @@ bool retro_load_game(const struct retro_game_info *info)
       log_cb(RETRO_LOG_INFO, "XRGB8888 is not supported.\n");
       return false;
    }
-
-   check_variables();
 
    // Test to make sure it initialized correctly.
    if (PHYSFS_isInit() == 0) {
@@ -237,6 +205,10 @@ bool retro_load_game(const struct retro_game_info *info)
 
 void retro_unload_game(void)
 {
+   if (PHYSFS_isInit() == 0) {
+      return;
+   }
+
    PHYSFS_unmount("res");
 }
 
@@ -262,23 +234,11 @@ size_t retro_serialize_size(void)
 
 bool retro_serialize(void *data_, size_t size)
 {
-   if (size < 2)
-      return false;
-
-   uint8_t *data = data_;
-   data[0] = x_coord;
-   data[1] = y_coord;
    return true;
 }
 
 bool retro_unserialize(const void *data_, size_t size)
 {
-   if (size < 2)
-      return false;
-
-   const uint8_t *data = data_;
-   x_coord = data[0] & 31;
-   y_coord = data[1] & 31;
    return true;
 }
 
