@@ -35,3 +35,5 @@ ifeq ($(platform), osx)
 #	FLAGS += -DMAC_OS_X_VERSION_MIN_REQUIRED=1020
 	FLAGS += -D__MACH__ -D__APPLE__
 endif
+
+CFLAGS += -std=gnu89

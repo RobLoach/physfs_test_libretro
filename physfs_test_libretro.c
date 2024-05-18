@@ -134,11 +134,12 @@ static void render_checkered(void)
    uint32_t color_r = 0xff << 16;
    uint32_t color_g = 0xff <<  8;
    uint32_t *line   = buf;
+   unsigned x, y;
 
-   for (unsigned y = 0; y < 240; y++, line += stride)
+   for (y = 0; y < 240; y++, line += stride)
    {
       unsigned index_y = ((y - y_coord) >> 4) & 1;
-      for (unsigned x = 0; x < 320; x++)
+      for (x = 0; x < 320; x++)
       {
          unsigned index_x = ((x - x_coord) >> 4) & 1;
          line[x] = (index_y ^ index_x) ? color_r : color_g;
