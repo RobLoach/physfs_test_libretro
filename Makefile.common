@@ -36,4 +36,5 @@ ifeq ($(platform), osx)
 	FLAGS += -D__MACH__ -D__APPLE__
 endif
 
-CFLAGS += -std=gnu89
+#CFLAGS += -std=gnu89 -std=c90
+#COREDEFINES = -Dinline=

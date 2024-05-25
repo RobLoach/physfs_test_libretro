@@ -27,10 +27,10 @@ void retro_init(void)
 {
    frame_buf = calloc(320 * 240, sizeof(uint32_t));
 
-   // Initialize PhysFS
-   //if (PHYSFS_init(NULL) == 0) {
+   /* Initialize PhysFS */
+   /* if (PHYSFS_init(NULL) == 0) { */
 
-   // Pass in the environment callback to initialize PhysFS
+   /* Pass in the environment callback to initialize PhysFS */
    if (PHYSFS_init((const char*)environ_cb) == 0) {
       log_cb(RETRO_LOG_ERROR, "Failed to initialize PhysFS: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
    }
@@ -63,7 +63,7 @@ void retro_get_system_info(struct retro_system_info *info)
    info->library_name     = "libretro_physfs_test";
    info->library_version  = "v1";
    info->need_fullpath    = false;
-   info->valid_extensions = NULL; // Anything is fine, we don't care.
+   info->valid_extensions = NULL;
 }
 
 void retro_get_system_av_info(struct retro_system_av_info *info)
@@ -163,44 +163,52 @@ bool retro_load_game(const struct retro_game_info *info)
       return false;
    }
 
-   // Test to make sure it initialized correctly.
+   /* Test to make sure it initialized correctly. */
    if (PHYSFS_isInit() == 0) {
       return false;
    }
 
-   // Mount the current working directory
+   /* Mount the current directory */
    if (PHYSFS_mount(".", "res", 1) == 0) {
       log_cb(RETRO_LOG_ERROR, "Failed to mount directory: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
       return false;
    }
 
-   // Open the test file
+   /* Open the test file */
    PHYSFS_File *file = PHYSFS_openRead("res/test.txt");
    if (file == NULL) {
       log_cb(RETRO_LOG_ERROR, "Failed to open file: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
       return false;
    }
 
-   // Get the file size
+   /* Get the file size */
    int size = PHYSFS_fileLength(file);
    if (size == -1) {
       log_cb(RETRO_LOG_ERROR, "Failed to get file length: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
       return false;
    }
 
-   // Read the text file
+   /* Read the text file */
    char buffer[256];
    PHYSFS_readBytes(file, buffer, size > 256 ? 255 : size);
    log_cb(RETRO_LOG_INFO, "Read: %s\n", buffer);
 
-   // Display the text message as a message
+   /* Display the text message as a message */
    struct retro_message msg = {
       buffer,
       100
    };
    environ_cb(RETRO_ENVIRONMENT_SET_MESSAGE, &msg);
 
-   // Display different directories
+   char** files = PHYSFS_enumerateFiles("res");
+   if (files != NULL) {
+      for (char** i = files; *i != NULL; i++) {
+         log_cb(RETRO_LOG_INFO, "Found file: %s\n", *i);
+      }
+      PHYSFS_freeList(files);
+   }
+
+   /* Display different directories */
    log_cb(RETRO_LOG_INFO, "PHYSFS_getBaseDir: %s\n", PHYSFS_getBaseDir());
    log_cb(RETRO_LOG_INFO, "PHYSFS_getPrefDir: %s\n", PHYSFS_getPrefDir("libretro", "physfs_test"));
    log_cb(RETRO_LOG_INFO, "PHYSFS_getUserDir: %s\n", PHYSFS_getUserDir());
