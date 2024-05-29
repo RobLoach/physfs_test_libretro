@@ -26,25 +26,12 @@ static void fallback_log(enum retro_log_level level, const char *fmt, ...)
 void retro_init(void)
 {
    frame_buf = calloc(320 * 240, sizeof(uint32_t));
-
-   /* Initialize PhysFS */
-   /* if (PHYSFS_init(NULL) == 0) { */
-
-   /* Pass in the environment callback to initialize PhysFS */
-   if (PHYSFS_init((const char*)environ_cb) == 0) {
-      log_cb(RETRO_LOG_ERROR, "Failed to initialize PhysFS: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
-   }
-   else {
-      log_cb(RETRO_LOG_INFO, "Initialized PhysFS.\n");
-   }
 }
 
 void retro_deinit(void)
 {
    free(frame_buf);
    frame_buf = NULL;
-
-   PHYSFS_deinit();
 }
 
 unsigned retro_api_version(void)
@@ -163,9 +150,12 @@ bool retro_load_game(const struct retro_game_info *info)
       return false;
    }
 
-   /* Test to make sure it initialized correctly. */
-   if (PHYSFS_isInit() == 0) {
-      return false;
+   /* Pass in the environment callback to initialize PhysFS */
+   if (PHYSFS_init((const char*)environ_cb) == 0) {
+      log_cb(RETRO_LOG_ERROR, "Failed to initialize PhysFS: %s\n", PHYSFS_getErrorByCode(PHYSFS_getLastErrorCode()));
+   }
+   else {
+      log_cb(RETRO_LOG_INFO, "Initialized PhysFS.\n");
    }
 
    /* Mount the current directory */
@@ -224,7 +214,9 @@ void retro_unload_game(void)
       return;
    }
 
+   /* Unload PhysFS */
    PHYSFS_unmount("res");
+   PHYSFS_deinit();
 }
 
 unsigned retro_get_region(void)
